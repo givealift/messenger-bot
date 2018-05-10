@@ -1,6 +1,7 @@
 import { caller } from './caller';
 import { responseBuilder, ITextResponse } from "./response-builder";
-
+import moment from 'moment';
+import { Route } from './_models/route';
 type TextType =
     "help"
     | "search"
@@ -24,7 +25,7 @@ export class MessageHandler {
         }
     }
 
-    handleMessage(sender_psid: string, received_message: any) {
+    async handleMessage(sender_psid: string, received_message: any) {
         let response;
         let text: string = received_message.text;
 
@@ -33,20 +34,48 @@ export class MessageHandler {
             switch (this.getTextType(text)) {
                 case "help":
                     response = this.getHelpResponse();
+                    console.debug("Responding with: help");
                     break;
                 case "search":
                     // TODO: build list template respnose
-                    const searchResults = this.search(text);
-                    response = responseBuilder.text(searchResults);
+                    let searchResults = await this.search(text);
+                    if (!searchResults.length) {
+                        response = responseBuilder.text("Niestety nic nie znalazłem :(.");
+                        console.debug("Responding with: nothing found");
+                    } else {
+                        let from = searchResults[0].from.city.cityId;
+                        let to = searchResults[0].to.city.cityId;
+                        let date = searchResults[0].from.date;
+                        date = moment(date).format("YYYY-MM-DD");
+                        const builder = responseBuilder.newListTemplateBuilder();
+                        builder.addElements(searchResults);
+                        if (searchResults.length > 4) {
+                            builder.addButton({
+                                "type": "web_url",
+                                "url": `https://givealift.herokuapp.com/route/search/?from=${from}&to=${to}&date=${date}`,
+                                "title": "Szukaj dalej"
+                            })
+                        }
+                        response = builder.build();
+
+                        console.debug("Responding with: list");
+                    }
                     break;
                 case "emoticon":
                     response = responseBuilder.text(text);
+                    console.debug("Responding with: emoticon");
                     break;
                 case "XD":
-                    response = responseBuilder.text(text + text[text.length - 1]);
+                    if (text.length > 30) {
+                        response = responseBuilder.text("Opanuj się.")
+                    } else {
+                        response = responseBuilder.text(text + text[text.length - 1]);
+                    }
+                    console.debug("Responding with: xD");
                     break;
                 default:
                     response = responseBuilder.text(this.unknownCommand(text));
+                    console.debug("Responding with: unknown");
             }
         }
         // Sends the response message
@@ -71,7 +100,7 @@ export class MessageHandler {
     }
 
     // TODO: move to service, return list or sth
-    search(text: string): string {
+    async search(text: string): Promise<Route[]> {
         text = text
             .replace(/\s\s+/g, ' ') // remove duplicated white spaces.
             .replace(/ z | do /g, " "); // trim ' z ' ' do ' as they're just to make query more natural.
@@ -79,10 +108,21 @@ export class MessageHandler {
         let [przejazd, from, to] = text.split(" ");
         console.log("debug: ", przejazd, from, to);
 
+        let response;
         if (from && to) {
-            return `Wygląda na to, że szukasz przejazdu z ${from} do ${to}.`;
+            response = await Promise.all(
+                [
+                    caller.searchRoutes(from, to, moment().format("YYYY-MM-DD")).then(x => { console.log(x.length); return x; }),
+                    caller.searchRoutes(from, to, moment().add(1, "day").format("YYYY-MM-DD")).then(x => { console.log(x.length); return x; }),
+                    caller.searchRoutes(from, to, moment().add(2, "day").format("YYYY-MM-DD")).then(x => { console.log(x.length); return x; })
+                ]
+            );
+            response = response.reduce((a, b) => a.concat(b), []);
+            console.log(response.length);
+            return response;
+
         }
-        return "Nic nie znalazłem :/";
+        return response || [];
     }
 
     getHelpResponse(): ITextResponse {
