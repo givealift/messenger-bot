@@ -2,7 +2,7 @@ import { Http } from "./http";
 import { MOCK_ROUTES } from './stub-api';
 import { City } from "./_models/city";
 import { CitiesProvider } from "./cities.provider";
-import { startsWith } from "./_models/utils";
+import { startsWith } from "./utils";
 
 export class APIService {
 

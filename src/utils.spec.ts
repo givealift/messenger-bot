@@ -1,4 +1,4 @@
-import { startsWith } from "./_models/utils";
+import { startsWith } from "./utils";
 import { expect } from "chai";
 
 describe.only("#startsWith()", () => {

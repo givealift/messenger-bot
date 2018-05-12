@@ -1,4 +1,4 @@
-import { City } from "./city";
+import { City } from "./_models/city";
 
 export const startsWith = (term: string) => (text: string) => {
     const [normalisedTerm, normalisedName] = [term, text]
