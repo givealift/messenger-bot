@@ -2,9 +2,10 @@
   "name": "messenger-webhook",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "main": "src/app.js",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node src/app.js",
+    "heroku-postbuild": "tsc",
     "test": "mocha --require ts-node/register --timeout 10000 src/**/*.spec.ts ",
     "test:watch": "nodemon --config nodemon.spec.json",
     "nodemon": "nodemon --config nodemon.json"
