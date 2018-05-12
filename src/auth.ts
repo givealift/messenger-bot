@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 
 export function handleVerification(req: Request, res: Response) {
-
-    // Your verify token. Should be a random string.
     const VERIFY_TOKEN = process.env.BOT_VERIFY_TOKEN;
 
     // Parse the query params
@@ -12,7 +10,6 @@ export function handleVerification(req: Request, res: Response) {
 
     // Checks if a token and mode is in the query string of the request
     if (mode && token) {
-
         // Checks the mode and token sent is correct
         if (mode === 'subscribe' && token === VERIFY_TOKEN) {
 
@@ -21,7 +18,6 @@ export function handleVerification(req: Request, res: Response) {
             res.status(200).send(challenge);
 
         } else {
-            // Responds with '403 Forbidden' if verify tokens do not match
             res.sendStatus(403);
         }
     }
