@@ -1,9 +1,4 @@
-import request from 'request';
-import axios from 'axios';
-import { City } from './_models/city';
-import { Route } from './_models/route';
 import { Http } from './http';
-import { MOCK_ROUTES } from './stub-api';
 
 export class FacebookService {
     private readonly PAGE_ACCESS_TOKEN = process.env.BOT_PAGE_ACCESS_TOKEN;
