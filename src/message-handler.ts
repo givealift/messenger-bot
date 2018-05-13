@@ -1,90 +1,77 @@
-import { caller } from './caller';
-import { responseBuilder, ITextResponse } from "./response-builder";
-import moment from 'moment';
+import { responseBuilder } from "./response-builder";
 import { Route } from './_models/route';
 import { FacebookService } from './_services/fb.service';
 import { APIService } from './_services/api.service';
+import { INSTRUCTIONS, UNKNOWN_COMMAND } from "./static-responses";
+import { default as moment, Moment } from 'moment';
+import { IRouteParams } from "./_interfaces/route-params";
+import { ITextResponse, IListResponse } from "./_interfaces/responses";
+
 type TextType =
     "help"
     | "search"
-    | "add"
+    | "notify"
+    | "link"
     | "emoticon"
     | "XD"
     | "unknown"
 
-export class MessageHandler {
+class MessageHandler {
 
-    private readonly helpMessage =
-        "Aby znaleźć przejazd wpisz 'przejazd (z) _Miasto-startowe_ " +
-        "(do) _Miasto-końcowe_, bez odmieniania przez przypadki. \n" +
-        "Na przykład: przejazd Warszawa Katowice";
+    private readonly HOME_URL = "https://givealift.herokuapp.com";
+    private readonly instructions = INSTRUCTIONS;
+    private readonly unknownCommand = UNKNOWN_COMMAND;
 
-    private readonly unknownCommand = (cmd: string): string => {
-        if (cmd.length < 10) {
-            return `Wybacz, ale dopiero się uczę i nie rozumiem co znaczy "${cmd}" :(. Wpisz "pomoc", aby zobaczyć na co znam odpowiedź!`;
-        } else {
-            return "Wybacz, ale dopiero się uczę i nie rozumiem.:(. Wpisz \"pomoc\", aby zobaczyć na co znam odpowiedź!"
+    private fb = new FacebookService();
+    private api = new APIService();
+
+    constructor() { }
+
+    public handle(webhook_event: any) {
+        const sender_psid = webhook_event.sender.id;
+        if (webhook_event.message) {
+            this.handleMessage(sender_psid, webhook_event.message);
+        } else if (webhook_event.postback) {
+            this.handlePostback(sender_psid, webhook_event.postback);
         }
     }
 
-    async handleMessage(sender_psid: string, received_message: any) {
+    private async handleMessage(sender_psid: string, received_message: any) {
         let response;
-        let text: string = received_message.text;
+        let incomingMessage: string = received_message.text;
 
-        // Checks if the message contains text
-        if (text) {
-            switch (this.getTextType(text)) {
-                case "help":
-                    response = this.getHelpResponse();
-                    console.debug("Responding with: help");
-                    break;
-                case "search":
-                    // TODO: build list template respnose
-                    let searchResults = await this.search(text);
-                    if (!searchResults.length) {
-                        response = responseBuilder.text("Niestety nic nie znalazłem :(.");
-                        console.debug("Responding with: nothing found");
-                    } else {
-                        let from = searchResults[0].from.city.cityId;
-                        let to = searchResults[0].to.city.cityId;
-                        let date = searchResults[0].from.date;
-                        date = moment(date).format("YYYY-MM-DD");
-                        const builder = responseBuilder.newListTemplateBuilder();
-                        builder.addElements(searchResults);
-                        if (searchResults.length > 4) {
-                            builder.addButton({
-                                "type": "web_url",
-                                "url": `https://givealift.herokuapp.com/route/search/?from=${from}&to=${to}&date=${date}`,
-                                "title": "Szukaj dalej"
-                            })
-                        }
-                        response = builder.build();
-
-                        console.debug("Responding with: list");
-                    }
-                    break;
-                case "emoticon":
-                    response = responseBuilder.text(text);
-                    console.debug("Responding with: emoticon");
-                    break;
-                case "XD":
-                    if (text.length > 30) {
-                        response = responseBuilder.text("Opanuj się.")
-                    } else {
-                        response = responseBuilder.text(text + text[text.length - 1]);
-                    }
-                    console.debug("Responding with: xD");
-                    break;
-                default:
-                    response = responseBuilder.text(this.unknownCommand(text));
-                    console.debug("Responding with: unknown");
-            }
+        switch (this.typeOf(incomingMessage)) {
+            case "help":
+                response = this.getHelpResponse();
+                console.debug("Responding with: help");
+                break;
+            case "link":
+                response = this.getLinkResponse();
+                console.debug("Responding with: link");
+                break;
+            case "emoticon":
+                response = this.getEmoticonResponse(incomingMessage);
+                console.debug("Responding with: emoticon");
+                break;
+            case "XD":
+                response = this.getXDResponse(incomingMessage);
+                console.debug("Responding with: xD");
+                break;
+            case "search":
+                response = await this.getSearchResponse(incomingMessage);
+                console.debug("Responding with: list");
+                break;
+            case "notify":
+                response = await this.getNotifyResponse(sender_psid, incomingMessage);
+                break;
+            default:
+                response = this.getNotSupportedResponse(incomingMessage);
+                console.debug("Responding with: unknown");
         }
-        // Sends the response message
-        caller.callSendAPI(sender_psid, response);
+        this.fb.sendResponse(sender_psid, response);
     }
 
-    getTextType(text: string): TextType {
+    private typeOf(text: string): TextType {
         switch (true) {
             case /[xX][D+d+]/.test(text):
                 return "XD";
@@ -94,44 +81,111 @@ export class MessageHandler {
                 return "help";
             case text.toLowerCase().startsWith("przejazd"):
                 return "search";
-            case text.toLowerCase().startsWith("dodaj"):
-                return "add";
+            case text.toLowerCase() === "link":
+                return "link";
+            case text.toLocaleLowerCase().startsWith("powiadom"):
+                return "notify";
             default:
                 return "unknown"
         }
     }
 
-    // TODO: move to service, return list or sth
-    async search(text: string): Promise<Route[]> {
+    private getHelpResponse(): ITextResponse {
+        return responseBuilder.text(this.instructions);
+    }
+
+    private getLinkResponse(): ITextResponse {
+        return responseBuilder.text(this.HOME_URL);
+    }
+
+    private getXDResponse(text: string): ITextResponse {
+        const response = text.length < 30 ? text + text[text.length - 1] : "Opanuj się.";
+        return responseBuilder.text(response);
+    }
+
+    private getEmoticonResponse(emoticon: string): ITextResponse {
+        return responseBuilder.text(emoticon);
+    }
+
+    private getNotSupportedResponse(text: string): ITextResponse {
+        return responseBuilder.text(this.unknownCommand(text))
+    }
+
+    private async getSearchResponse(text: string): Promise<IListResponse | ITextResponse> {
+        const dateFormat = "YYYY-MM-DD";
+        const params: IRouteParams = this.extractParamsFromText(text);
+        const searchResults: Route[] = await this.search(params);
+
+        if (searchResults.length) {
+            const builder = responseBuilder.newListTemplateBuilder();
+            builder.addElements(searchResults);
+
+            if (searchResults.length > 4) {
+                let date = params.date ? params.date.format(dateFormat) : searchResults[0].from.date;
+                builder.addButton({
+                    "type": "web_url",
+                    "url": `https://givealift.herokuapp.com/route/search/?from=${params.from}&to=${params.to}&date=${date}`,
+                    "title": "Szukaj dalej"
+                })
+
+            }
+            return builder.build();
+        }
+        return responseBuilder.text("Niestety nic nie znalazłem :(.");
+    }
+
+    private async getNotifyResponse(sender_psid: string, text: string): Promise<ITextResponse> {
+        const params = this.extractParamsFromText(text);
+        const response = await this.api.subscribeForNotification(sender_psid, params)
+        if (response === 'SUBSCRIBED') {
+            return responseBuilder.text(`Przyjąłem. Powiadomię Cię jak tylko pojawi się przejazd na trasie ${params.from} - ${params.to}`);
+        }
+        return responseBuilder.text('Sorki, chyba mam jakieś zwarcie, :/ Spróbuj ponownie później.');
+    }
+
+    private extractParamsFromText(text: string): IRouteParams {
         text = text
-            .replace(/\s\s+/g, ' ') // remove duplicated white spaces.
-            .replace(/ z | do /g, " "); // trim ' z ' ' do ' as they're just to make query more natural.
+            .replace(/\s\s+/g, ' ') // Remove duplicated white spaces.
+            .replace(/ z | do /g, " "); // Trim ' z ' ' do ' as they're just to make query more natural.
 
-        let [przejazd, from, to] = text.split(" ");
-        console.log("debug: ", przejazd, from, to);
+        let [przejazd, from, to, dateString] = text.split(" ");
 
-        let response;
+        let date: Moment = dateString ? moment(dateString) : null;
+
+        return {
+            from: from,
+            to: to,
+            date: date
+        }
+    }
+
+    private async search({ from, to, date }: IRouteParams): Promise<Route[]> {
+        const dateFormat = "YYYY-MM-DD";
+
+        console.log("debug| search for:", from, to, date);
+
         if (from && to) {
+            if (date) {
+                return await this.api.searchRoutes(from, to, date.format(dateFormat))
+            }
+
+            let response;
             response = await Promise.all(
                 [
-                    caller.searchRoutes(from, to, moment().format("YYYY-MM-DD")).then(x => { console.log(x.length); return x; }),
-                    caller.searchRoutes(from, to, moment().add(1, "day").format("YYYY-MM-DD")).then(x => { console.log(x.length); return x; }),
-                    caller.searchRoutes(from, to, moment().add(2, "day").format("YYYY-MM-DD")).then(x => { console.log(x.length); return x; })
+                    this.api.searchRoutes(from, to, moment().format(dateFormat)),
+                    this.api.searchRoutes(from, to, moment().add(1, "day").format(dateFormat)),
+                    this.api.searchRoutes(from, to, moment().add(2, "day").format(dateFormat))
                 ]
             );
             response = response.reduce((a, b) => a.concat(b), []);
-            console.log(response.length);
             return response;
-
         }
-        return response || [];
+        return [];
     }
 
-    getHelpResponse(): ITextResponse {
-        return responseBuilder.text(this.helpMessage);
-    }
+    // ================ POSTBACK handling ================
 
-    handlePostback(sender_psid: string, received_postback: any) {
+    private handlePostback(sender_psid: string, received_postback: any) {
         let response;
 
         // Get the payload for the postback
@@ -151,6 +205,8 @@ export class MessageHandler {
             }
         }
         // Send the message to acknowledge the postback
-        caller.callSendAPI(sender_psid, response);
+        this.fb.sendResponse(sender_psid, response);
     }
 }
+
+export const messageHandler = new MessageHandler();

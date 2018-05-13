@@ -1,19 +1,7 @@
 import { Route } from "./_models/route";
 import moment from 'moment';
+import { IButton, IListResponse, ITextResponse, ITemplateParams } from "./_interfaces/responses";
 
-export interface ITextResponse {
-    text: string
-}
-
-interface IButton {
-    title?: string;
-    type?: string;
-    payload?: string;
-    url?: string;
-    messenger_extensions? : boolean | string;
-    webview_height_ratio?: string;
-    fallback_url?: string;
-}
 
 class ListTemplateBuilder {
     private template = {
@@ -30,7 +18,7 @@ class ListTemplateBuilder {
 
     constructor() { }
 
-    public build() {
+    public build(): IListResponse {
         console.log("building");
 
         return this.template;
@@ -100,18 +88,6 @@ class ListTemplateBuilder {
     }
 }
 
-interface ITemplateButton {
-    type?: "postback",
-    title: string,
-    payload: string,
-}
-
-interface ITemplateParams {
-    title: string;
-    subtitle: string;
-    buttons: ITemplateButton[]
-}
-
 class ResponseBuilder {
 
     public text(text: string): ITextResponse {
@@ -136,73 +112,6 @@ class ResponseBuilder {
 
     public newListTemplateBuilder() {
         return new ListTemplateBuilder();
-    }
-
-
-    public listTemplate() {
-        return {
-            "attachment": {
-                "type": "template",
-                "payload": {
-                    "template_type": "list",
-                    "top_element_style": "compact",
-                    "elements": [{
-                        "title": "Kraków -> Warszawa, dzisiaj o 23:30 ",
-                        "subtitle": "Kierowca Luigi",
-                        "default_action": {
-                            "type": "web_url",
-                            "url": "https://givealift.herokuapp.com",
-                            "messenger_extensions": false,
-                            "webview_height_ratio": "tall"
-                        }
-                    },
-                    {
-                        "title": "Kraków -> Warszawa, dzisiaj o 23:59 ",
-                        "subtitle": "Kierowca Tamagochi",
-                        "default_action": {
-                            "type": "web_url",
-                            "url": "https://givealift.herokuapp.com",
-                            "messenger_extensions": false,
-                            "webview_height_ratio": "tall"
-                        }
-                    },
-                    {
-                        "title": "Kraków -> Warszawa, jutro o 8:30 ",
-                        "subtitle": "Kierowca Rajdowiec",
-                        "default_action": {
-                            "type": "web_url",
-                            "url": "https://givealift.herokuapp.com",
-                            "messenger_extensions": false,
-                            "webview_height_ratio": "tall"
-                        }
-                    },
-                    {
-                        "title": "Kraków -> Warszawa, 10.05 o 20:30 ",
-                        "subtitle": "Kierowca nieznany",
-                        "default_action": {
-                            "type": "web_url",
-                            "url": "https://givealift.herokuapp.com",
-                            "messenger_extensions": false,
-                            "webview_height_ratio": "tall"
-                        },
-                        "buttons": [
-                            {
-                                "title": "Zadzwoń do kierowcy",
-                                "type": "phone_number",
-                                "payload": "+48123123123"
-                            }
-                        ]
-                    }
-                    ],
-                    "buttons": [
-                        {
-                            "title": "View More",
-                            "type": "postback",
-                            "payload": "payload"
-                        }]
-                }
-            }
-        }
     }
 }
 
