@@ -117,19 +117,19 @@ class MessageHandler {
         const searchResults: Route[] = await this.search(params);
 
         if (searchResults.length) {
-            const builder = responseBuilder.newListTemplateBuilder();
-            builder.addElements(searchResults);
+            const list = responseBuilder.list();
+            list.addElements(searchResults);
 
             if (searchResults.length > 4) {
                 let date = params.date ? params.date.format(dateFormat) : searchResults[0].from.date;
-                builder.addButton({
+                list.addButton({
                     "type": "web_url",
                     "url": `https://givealift.herokuapp.com/route/search/?from=${params.from}&to=${params.to}&date=${date}`,
                     "title": "Szukaj dalej"
                 })
 
             }
-            return builder.build();
+            return list.build();
         }
         return responseBuilder.text("Niestety nic nie znalazłem :(.");
     }
