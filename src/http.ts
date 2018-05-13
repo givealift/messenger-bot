@@ -17,7 +17,7 @@ export class Http {
         const response = await this._httpClient.get<T>(url, { params: params });
         console.log(`HTTP <`);
         if (response.data instanceof Array && response.data.length > 5) {
-            console.log(response.data.slice(0,5));
+            console.log(response.data.slice(0, 5));
             console.log("...");
         } else {
             console.log(response.data);
@@ -26,7 +26,11 @@ export class Http {
     }
 
     public async post<T>(url: string, data?: any, config?: AxiosRequestConfig) {
+        console.log(`POST > ${url}`);
+        console.log(config);
+
         const response = await this._httpClient.post(url, data, config);
+        console.log(`POST < ${response.data}`);
         return response.data;
     }
 }
