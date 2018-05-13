@@ -26,6 +26,18 @@ export class FacebookService {
         await this.send(request_body);
     }
 
+    async sendAction(action: "mark_seen" | "typing_on" | "typing_off", sender_psid: string) {
+        const request_body =
+            {
+                "recipient": {
+                    "id": sender_psid
+                },
+                "sender_action": action
+
+            }
+        await this.send(request_body);
+    }
+
     private constructResponseBody(sender_psid: string, response: any) {
         return {
             "messaging_type": "RESPONSE",

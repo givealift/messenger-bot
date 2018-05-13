@@ -41,7 +41,8 @@ class MessageHandler {
     private async handleMessage(sender_psid: string, received_message: any) {
         let response;
         let incomingMessage: string = received_message.text;
-
+        await this.fb.sendAction("mark_seen", sender_psid);
+        await this.fb.sendAction("typing_on", sender_psid);
         switch (this.typeOf(incomingMessage)) {
             case "help":
                 response = this.getHelpResponse();

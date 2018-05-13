@@ -26,9 +26,10 @@ export class CitiesProvider {
 
     private static async fetchCities() {
         const url = `https://mysterious-lowlands-82501.herokuapp.com/api/city`;
-        let response;
+        let response: City[];
         try {
             response = await this.http.get<City[]>(url);
+            response = response.filter(city => city.name);
         } catch (error) {
             console.log(error);
         }
