@@ -5,6 +5,7 @@ import { CitiesProvider } from "./cities.provider";
 import { startsWith } from "../utils";
 import { IRouteParams } from "../_interfaces/route-params";
 import moment from 'moment';
+import { IRouteSubscription } from "../_interfaces/route-subscription";
 export class APIService {
 
     private readonly GIVEALIFT_API_URL = "https://mysterious-lowlands-82501.herokuapp.com/api";
@@ -39,7 +40,6 @@ export class APIService {
     async getCity(name: string): Promise<City | null> {
         const cities: City[] = await CitiesProvider.getCities();
         const matches = cities.filter(city => startsWith(name)(city.name));
-
         if (matches.length) {
             return matches[0];
         }
@@ -55,15 +55,12 @@ export class APIService {
         return response || null;
     }
 
-    async subscribeForNotification(owner_psid: string, params: IRouteParams) {
-        // const url = `${this.GIVEALIFT_API_URL}/subscribe`;
-        const url = "http://localhost:1337/subscribe";
-
+    private async prepareSubscriptionBody(owner_psid: string, params: IRouteParams): Promise<IRouteSubscription> {
         let fromCity = await this.getCity(params.from);
         let toCity = await this.getCity(params.to);
 
         if (!(fromCity && toCity)) {
-            return "CITY_NOT_FOUND";
+            throw new Error("CITY_NOT_FOUND");
         }
 
         let date = params.date ? moment(params.date).format("YYYY-MM-DD") : null;
@@ -74,11 +71,18 @@ export class APIService {
             to: toCity.cityId,
             date: date
         }
+        return body;
+    }
+
+    async subscribeForNotification(sender_psid: string, params: IRouteParams) {
+        // const url = `${this.GIVEALIFT_API_URL}/subscribe`;
+        const url = "http://localhost:1337/subscribe";
         let response;
         try {
+            const body = await this.prepareSubscriptionBody(sender_psid, params);
             response = await this.http.post(url, body);
         } catch (error) {
-            console.log(error);
+            console.error(error);
         }
         return response;
     }
