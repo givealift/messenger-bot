@@ -3,6 +3,7 @@ import { MOCK_ROUTES } from './stub-api';
 import { City } from "./_models/city";
 import { CitiesProvider } from "./cities.provider";
 import { startsWith } from "./utils";
+import { IRouteParams } from "./message-handler";
 
 export class APIService {
 
@@ -52,5 +53,23 @@ export class APIService {
             console.log(error);
         }
         return response || null;
+    }
+
+    async subscribeForNotification(owner_psid: string, routeParams: IRouteParams) {
+        // const url = `${this.GIVEALIFT_API_URL}/subscribe`;
+        const url = "http://localhost:1337/subscribe";
+        const body = {
+            subscriber: owner_psid,
+            from: routeParams.from,
+            to: routeParams.to,
+            date: routeParams.date
+        }
+        let response;
+        try {
+            response = await this.http.post(url, body);
+        } catch (error) {
+            console.log(error);
+        }
+        return response;
     }
 }
