@@ -1,5 +1,5 @@
-import { City } from "./_models/city";
-import { Http } from "./http";
+import { City } from "../_models/city";
+import { Http } from "../http";
 
 export class CitiesProvider {
 

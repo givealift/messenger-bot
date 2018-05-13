@@ -1,9 +1,9 @@
 import express from "express";
 import bodyParser from "body-parser";
-import { handleVerification } from "./auth";
+import { handleVerification } from "./fb-auth";
 import { messageHandler as handler } from "./message-handler";
-import { CitiesProvider } from "./cities.provider";
-import { database as db } from './database';
+import { CitiesProvider } from "./_services/cities.provider";
+import { database as db } from './_services/database';
 
 const PAGE_ACCESS_TOKEN = process.env.BOT_PAGE_ACCESS_TOKEN;
 const PORT = process.env.PORT || 1337;

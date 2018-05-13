@@ -1,4 +1,4 @@
-import { CitiesProvider } from "./cities.provider";
+import { CitiesProvider } from "../_services/cities.provider";
 import { expect } from "chai";
 
 describe("Cities provider", () => {

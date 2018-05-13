@@ -1,13 +1,7 @@
 import loki from 'lokijs';
+import { IRouteSubscription } from '../_interfaces/route-subscription';
 
 const COLLECTION_NAME = 'subscribers';
-
-export interface IRouteSubscription {
-    subscriber: string;
-    from: string;
-    to: string;
-    date: string;
-}
 
 class SubscriptionDatabase {
     private db: loki;

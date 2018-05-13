@@ -1,9 +1,9 @@
-import { Http } from "./http";
-import { MOCK_ROUTES } from './stub-api';
-import { City } from "./_models/city";
+import { Http } from "../http";
+import { MOCK_ROUTES } from '../stub-api';
+import { City } from "../_models/city";
 import { CitiesProvider } from "./cities.provider";
-import { startsWith } from "./utils";
-import { IRouteParams } from "./message-handler";
+import { startsWith } from "../utils";
+import { IRouteParams } from "../_interfaces/route-params";
 
 export class APIService {
 

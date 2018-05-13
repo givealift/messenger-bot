@@ -2,6 +2,8 @@ import { caller } from './caller';
 import { responseBuilder, ITextResponse } from "./response-builder";
 import moment from 'moment';
 import { Route } from './_models/route';
+import { FacebookService } from './_services/fb.service';
+import { APIService } from './_services/api.service';
 type TextType =
     "help"
     | "search"

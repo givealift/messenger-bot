@@ -1,4 +1,4 @@
-import { Http } from './http';
+import { Http } from '../http';
 
 export class FacebookService {
     private readonly PAGE_ACCESS_TOKEN = process.env.BOT_PAGE_ACCESS_TOKEN;
