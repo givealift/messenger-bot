@@ -1,15 +1,20 @@
+import moment from 'moment';
 export const INSTRUCTIONS =
-    ":) Aby znaleźć przejazd wpisz 'przejazd (z) _Miasto-startowe_ " +
-    "(do) _Miasto-końcowe_, bez odmieniania przez przypadki. \n" +
-    "Na przykład: przejazd Warszawa Katowice\n" +
-    ":) Szukasz adresu naszej strony? Wpisz _link_\n";
+    "🔹 Aby znaleźć przejazd wpisz *przejazd (z) _Miasto-startowe_ _data_" +
+    "(do) _Miasto-końcowe_*, bez odmieniania przez przypadki. \n" +
+    `Na przykład: przejazd Warszawa Katowice ${moment().format("DD-MM-YYYY")}\n` +
+    "Jeśli pominiesz datę, poszukam najbliżysz przejazdów.\n" +
+    "🔹 Szukasz adresu naszej strony? Wpisz *link* \n" +
+    "🔹 Jeśli chcesz, żebym Cię powiadomił o nowym przejeździe, " +
+    "napisz: *powiadom _Miasto-startowe_ _Miast-końcowe_ _data_* \n" +
+    "Podobnie jak przy szukaniu, data jest opcjonalna :)";
 
 export const UNKNOWN_COMMAND = (cmd: string): string => {
     if (cmd.length < 20) {
-        return `Wybacz, ale dopiero się uczę i nie rozumiem co znaczy "${cmd}" :(` +
-            "Wpisz \"pomoc\", aby zobaczyć na co znam odpowiedź!";
+        return `Wybacz, ale dopiero się uczę i nie rozumiem co znaczy "${cmd}" :( ` +
+            "Wpisz \"*pomoc*\", aby zobaczyć na co znam odpowiedź!";
     } else {
         return "Wybacz, ale dopiero się uczę i nie rozumiem.:(." +
-            "Wpisz \"pomoc\", aby zobaczyć na co znam odpowiedź!"
+            "Wpisz \"*pomoc*\", aby zobaczyć na co znam odpowiedź!"
     }
 }
