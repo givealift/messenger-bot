@@ -4,7 +4,7 @@ import { City } from "../_models/city";
 import { CitiesProvider } from "./cities.provider";
 import { startsWith } from "../utils";
 import { IRouteParams } from "../_interfaces/route-params";
-
+import moment from 'moment';
 export class APIService {
 
     private readonly GIVEALIFT_API_URL = "https://mysterious-lowlands-82501.herokuapp.com/api";
@@ -55,14 +55,24 @@ export class APIService {
         return response || null;
     }
 
-    async subscribeForNotification(owner_psid: string, routeParams: IRouteParams) {
+    async subscribeForNotification(owner_psid: string, params: IRouteParams) {
         // const url = `${this.GIVEALIFT_API_URL}/subscribe`;
         const url = "http://localhost:1337/subscribe";
+
+        let fromCity = await this.getCity(params.from);
+        let toCity = await this.getCity(params.to);
+
+        if (!(fromCity && toCity)) {
+            return "CITY_NOT_FOUND";
+        }
+
+        let date = params.date ? moment(params.date).format("YYYY-MM-DD") : null;
+
         const body = {
             subscriber: owner_psid,
-            from: routeParams.from,
-            to: routeParams.to,
-            date: routeParams.date
+            from: fromCity.cityId,
+            to: toCity.cityId,
+            date: date
         }
         let response;
         try {
