@@ -3,6 +3,7 @@ import bodyParser from "body-parser";
 import { handleVerification } from "./auth";
 import { MessageHandler } from "./message-handler";
 import { CitiesProvider } from "./cities.provider";
+import { database as db } from './database';
 
 const PAGE_ACCESS_TOKEN = process.env.BOT_PAGE_ACCESS_TOKEN;
 const PORT = process.env.PORT || 1337;
@@ -48,3 +49,13 @@ app.post('/webhook', (req, res) => {
         res.sendStatus(404);
     }
 });
+
+app.post('/subscribe', (req, res) => {
+    let body = req.body;
+    db.add(body);
+    res.status(200).send('SUBSCRIBED');
+})
+
+app.get('/subscriptions', (req, res) => {
+    res.status(200).send(db.getAll());
+})
