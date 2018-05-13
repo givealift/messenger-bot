@@ -1,6 +1,7 @@
 export interface IRouteSubscription {
     subscriber: string;
-    from: string;
-    to: string;
+    from: number;
+    to: number;
     date: string;
+    routeId?: number;
 }
