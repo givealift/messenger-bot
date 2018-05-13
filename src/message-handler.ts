@@ -6,11 +6,13 @@ import { INSTRUCTIONS, UNKNOWN_COMMAND } from "./static-responses";
 import { default as moment, Moment } from 'moment';
 import { IRouteParams } from "./_interfaces/route-params";
 import { ITextResponse, IListResponse } from "./_interfaces/responses";
+import { startsWith } from "./utils";
 
 type TextType =
     "help"
     | "search"
     | "notify"
+    | "cancel-notify"
     | "link"
     | "emoticon"
     | "XD"
@@ -85,6 +87,8 @@ class MessageHandler {
                 return "link";
             case text.toLocaleLowerCase().startsWith("powiadom"):
                 return "notify";
+            case startsWith("anuluj")(text):
+                return "cancel-notify";
             default:
                 return "unknown"
         }
