@@ -6,7 +6,6 @@ export class FacebookService {
     private http = new Http();
 
     async sendResponse(sender_psid: string, response: any) {
-        // Construct the message body
         const request_body = this.constructRequestBody(sender_psid, response);
 
         try {
@@ -14,7 +13,7 @@ export class FacebookService {
             console.log('message sent!')
             console.log(body);
         } catch (error) {
-            console.error("Unable to send message:" + error);
+            console.error("Unable to send message: " + error);
         }
     }
 

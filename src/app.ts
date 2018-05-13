@@ -1,7 +1,7 @@
 import express from "express";
 import bodyParser from "body-parser";
 import { handleVerification } from "./auth";
-import { MessageHandler } from "./message-handler";
+import { messageHandler as handler } from "./message-handler";
 import { CitiesProvider } from "./cities.provider";
 import { database as db } from './database';
 
@@ -9,7 +9,6 @@ const PAGE_ACCESS_TOKEN = process.env.BOT_PAGE_ACCESS_TOKEN;
 const PORT = process.env.PORT || 1337;
 
 const app = express();
-const handler: MessageHandler = new MessageHandler();
 
 app.use(bodyParser.json());
 
@@ -34,10 +33,6 @@ app.post('/webhook', (req, res) => {
             // will only ever contain one message, so we get index 0
             let webhook_event = entry.messaging[0];
             console.log("incoming message", webhook_event);
-
-            // Get the sender PSID
-            let sender_psid = webhook_event.sender.id;
-            console.log('Sender PSID: ' + sender_psid);
 
             handler.handle(webhook_event);
         });
