@@ -7,11 +7,14 @@ import { default as moment, Moment } from 'moment';
 import { IRouteParams } from "./_interfaces/route-params";
 import { ITextResponse, IListResponse } from "./_interfaces/responses";
 import { startsWith } from "./utils";
+import { IRouteSubscription } from "./_interfaces/route-subscription";
+import { CitiesProvider } from "./_services/cities.provider";
+import { database } from "./_services/database";
 
 type TextType =
     "help"
     | "search"
-    | "notify"
+    | "subscribe"
     | "cancel-notify"
     | "link"
     | "emoticon"
@@ -33,8 +36,15 @@ class MessageHandler {
         const sender_psid = webhook_event.sender.id;
         if (webhook_event.message) {
             this.handleMessage(sender_psid, webhook_event.message);
-        } else if (webhook_event.postback) {
+            return;
+        }
+        if (webhook_event.postback) {
             this.handlePostback(sender_psid, webhook_event.postback);
+            return;
+        }
+        if (webhook_event.notification) {
+            this.handleNotification(sender_psid, webhook_event.notification);
+            return;
         }
     }
 
@@ -64,8 +74,8 @@ class MessageHandler {
                 response = await this.getSearchResponse(incomingMessage);
                 console.debug("Responding with: list");
                 break;
-            case "notify":
-                response = await this.getNotifyResponse(sender_psid, incomingMessage);
+            case "subscribe":
+                response = await this.getSubscribeResponse(sender_psid, incomingMessage);
                 break;
             default:
                 response = this.getNotSupportedResponse(incomingMessage);
@@ -87,7 +97,7 @@ class MessageHandler {
             case text.toLowerCase() === "link":
                 return "link";
             case text.toLocaleLowerCase().startsWith("powiadom"):
-                return "notify";
+                return "subscribe";
             case startsWith("anuluj")(text):
                 return "cancel-notify";
             default:
@@ -139,7 +149,7 @@ class MessageHandler {
         return responseBuilder.text("Niestety nic nie znalazłem :(.");
     }
 
-    private async getNotifyResponse(sender_psid: string, text: string): Promise<ITextResponse> {
+    private async getSubscribeResponse(sender_psid: string, text: string): Promise<ITextResponse> {
         const params = this.extractParamsFromText(text);
         const response = await this.api.subscribeForNotification(sender_psid, params)
         if (response === 'SUBSCRIBED') {
@@ -187,6 +197,36 @@ class MessageHandler {
         }
         return [];
     }
+
+    // ================ NOTIFICATION handling ================
+
+    private async handleNotification(sender_psid: string, notification: IRouteSubscription) {
+        let cities = await database.cities.data;
+        let [fromCity] = cities.filter(city => city.cityId === notification.from);
+        let [toCity] = cities.filter(city => city.cityId === notification.to);
+
+        let announcement = responseBuilder.routeAnnouncment(fromCity.name, toCity.name);
+
+        let route = await this.api.getRoute(notification.routeId);
+
+        if (!route) {
+            throw new Error(`ROUTE_NOT_FOUND [routeId: ${notification.routeId}]`);
+        }
+
+        if (!route.from.city.name) {
+            route.from.city.name = fromCity.name;
+        }
+
+        if (!route.to.city.name) {
+            route.to.city.name = toCity.name;
+        }
+        const routeResponse = responseBuilder.subscribedRoute(route);
+
+        await this.fb.sendNotificaiton(notification.subscriber, announcement);
+
+        await this.fb.sendNotificaiton(notification.subscriber, routeResponse);
+    }
+
 
     // ================ POSTBACK handling ================
 

@@ -59,7 +59,7 @@ export class ListTemplateBuilder {
 
         const template = {
             "title": `${from} -> ${to}, ${displayDate} o ${displayTime}`,
-            "subtitle": `${driverName} ${driverSurname}`, // TODO: fetch user and add id to the model
+            "subtitle": `${driverName} ${driverSurname}`,
             "default_action": {
                 "type": "web_url",
                 "url": `https://givealift.herokuapp.com/route/${route.routeId}`,
@@ -70,7 +70,7 @@ export class ListTemplateBuilder {
                 {
                     "title": "Zadzwoń do kierowcy",
                     "type": "phone_number",
-                    "payload": driverPhone //TODO: fetch user and add phone number here
+                    "payload": driverPhone
                 }
             ]
         }
