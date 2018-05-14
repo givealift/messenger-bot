@@ -24,7 +24,7 @@ export class CitiesProvider {
         this.initialised = true;
     }
 
-    private static async fetchCities() {
+    static async fetchCities() {
         const url = `https://mysterious-lowlands-82501.herokuapp.com/api/city`;
         let response: City[];
         try {

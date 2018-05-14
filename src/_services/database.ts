@@ -1,35 +1,44 @@
 import loki from 'lokijs';
 import { IRouteSubscription } from '../_interfaces/route-subscription';
+import { City } from '../_models/city';
+import { httpify } from 'caseless';
+import { CitiesProvider } from './cities.provider';
 
-const COLLECTION_NAME = 'subscribers';
+const CITIES = 'cities';
+const SUBSCRIBERS = 'subscribers';
 
-class SubscriptionDatabase {
+class Database {
     private db: loki;
 
     constructor() {
         this.db = this.initialize();
     }
 
-    add(data: IRouteSubscription) {
-        this.subscribers.insert(data);
-    }
-
-    getAll() {
-        return this.subscribers.data;
-
+    get cities(): Collection<City> {
+        return this.db.getCollection(CITIES);
     }
 
     get subscribers(): Collection<IRouteSubscription> {
-        return this.db.getCollection(COLLECTION_NAME);
+        return this.db.getCollection(SUBSCRIBERS)
     }
 
     private initialize(): loki {
-        const initCollection = () => {
-            let subscribers = db.getCollection(COLLECTION_NAME);
+
+        const initCollection = async () => {
+            let subscribers = db.getCollection(SUBSCRIBERS);
+            let cities = db.getCollection("cities");
+
             if (!subscribers) {
-                subscribers = db.addCollection<IRouteSubscription>(COLLECTION_NAME, { indices: ['subscriber'] })
+                subscribers = db.addCollection<IRouteSubscription>(SUBSCRIBERS, { indices: ['subscriber'] })
+            }
+
+            if (!cities) {
+                cities = db.addCollection<City>("cities");
+                let data = await CitiesProvider.fetchCities();
+                data.forEach(city => cities.insert(city));
             }
         }
+
         let db = new loki('database.db', {
             autoload: true,
             autoloadCallback: initCollection,
@@ -40,4 +49,4 @@ class SubscriptionDatabase {
     }
 }
 
-export const database = new SubscriptionDatabase();
+export const database = new Database();
