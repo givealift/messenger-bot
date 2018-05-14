@@ -30,7 +30,8 @@ export class Http {
         console.log(config);
 
         const response = await this._httpClient.post(url, data, config);
-        console.log(`POST < ${response.data}`);
+        console.log(`POST <`);
+        console.log(response.data);
         return response.data;
     }
 }
