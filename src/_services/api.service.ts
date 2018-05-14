@@ -6,6 +6,7 @@ import { startsWith } from "../utils";
 import { IRouteParams } from "../_interfaces/route-params";
 import moment from 'moment';
 import { IRouteSubscription } from "../_interfaces/route-subscription";
+import { Route } from "../_models/route";
 export class APIService {
 
     private readonly GIVEALIFT_API_URL = "https://mysterious-lowlands-82501.herokuapp.com/api";
@@ -53,6 +54,17 @@ export class APIService {
             console.log(error);
         }
         return response || null;
+    }
+
+    async getRoute(routeId: number): Promise<Route | null> {
+        try {
+            const url = `${this.GIVEALIFT_API_URL}/route/${routeId}`;
+            return await this.http.get<Route>(url);
+        }
+        catch (error) {
+            console.log(error);
+            return null;
+        }
     }
 
     private async prepareSubscriptionBody(owner_psid: string, params: IRouteParams): Promise<IRouteSubscription> {
