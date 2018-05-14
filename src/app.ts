@@ -4,6 +4,8 @@ import { handleVerification } from "./fb-auth";
 import { messageHandler as handler } from "./message-handler";
 import { CitiesProvider } from "./_services/cities.provider";
 import { database as db } from './_services/database';
+import { FacebookService } from "./_services/fb.service";
+import { IRouteSubscription } from "./_interfaces/route-subscription";
 
 const PAGE_ACCESS_TOKEN = process.env.BOT_PAGE_ACCESS_TOKEN;
 const PORT = process.env.PORT || 1337;
@@ -46,11 +48,64 @@ app.post('/webhook', (req, res) => {
 });
 
 app.post('/subscribe', (req, res) => {
-    let body = req.body;
+    let body: IRouteSubscription = req.body;
+    db.add(body);
+    res.status(200).send('SUBSCRIBED');
+})
+
+app.delete('/subscribe', (req, res) => {
+    let body: IRouteSubscription = req.body;
     db.add(body);
     res.status(200).send('SUBSCRIBED');
 })
 
 app.get('/subscriptions', (req, res) => {
     res.status(200).send(db.getAll());
+})
+
+app.post('/notify', async (req, res) => {
+    let body: IRouteSubscription = req.body;
+    let cities = await CitiesProvider.getCities();
+    let [fromCity] = cities.filter(city => city.cityId === body.from);
+    let [toCity] = cities.filter(city => city.cityId === body.to);
+    const fb = new FacebookService();
+
+
+    let response = {
+        "dynamic_text": {
+            "text": `Hej, {{first_name}}! Pojawił się przejazd na trasie ${fromCity.name} - ${toCity.name}`,
+            "fallback_text": `Hej! Pojawił się przejazd na trasie ${fromCity.name} - ${toCity.name}`
+        }
+    };
+    await fb.sendNotificaiton(body.subscriber, response);
+    const routeResponse = {
+        "attachment": {
+            "type": "template",
+            "payload": {
+                "template_type": "generic",
+                "elements": [
+                    {
+                        "title": `${fromCity.name} - ${toCity.name}`,
+                        "subtitle": "Imie i nazwisko kierwocy, data",
+                        "default_action": {
+                            "type": "web_url",
+                            "url": `https://givealift.herokuapp.com/route/${body.routeId}`,
+                            "messenger_extensions": "FALSE",
+                            "webview_height_ratio": "COMPACT"
+                        },
+                        "buttons": [
+                            {
+                                "type": "web_url",
+                                "url": `https://givealift.herokuapp.com/route/${body.routeId}`,
+                                "title": "Szczegóły"
+                            }
+                        ]
+                    }
+                ],
+            }
+        }
+
+    }
+    await fb.sendNotificaiton(body.subscriber, routeResponse);
+    res.status(200).send("NOTIFIED");
 })
