@@ -2,7 +2,7 @@ import { messageHandler } from "./message-handler";
 import { expect } from "chai";
 import { isMoment } from "moment";
 
-describe.only("Message Handler", () => {
+describe("Message Handler", () => {
     it("#extractParamsFromText() should extract 'from', 'to', 'date'", () => {
         const text = "Przejazd   Warszawa    Wrocław    2018-12-12"
         const params = messageHandler["extractParamsFromText"](text);

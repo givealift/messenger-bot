@@ -1,7 +1,7 @@
 import { startsWith } from "./utils";
 import { expect } from "chai";
 
-describe.only("#startsWith()", () => {
+describe("#startsWith()", () => {
     
     it("should filter correctly normal strings", () => {
         const strings = ["ala", "ma", "KOTA"];
