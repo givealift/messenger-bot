@@ -1,7 +1,8 @@
 import { Route } from "./_models/route";
 import { IButton, IListResponse } from "./_interfaces/responses";
 import moment from 'moment';
-
+import 'moment/locale/pl';
+moment.locale('pl');
 
 export class ListTemplateBuilder {
     private template = {
@@ -36,7 +37,7 @@ export class ListTemplateBuilder {
         const to = route.to.city.name;
         const dateTime = moment(route.from.date);
         const timeDiff = moment(dateTime).diff(moment(), "day")
-        const displayTime = moment(dateTime).format("hh:mm");
+        const displayTime = moment(dateTime).format("HH:mm");
 
         const driverName = route.galUserPublicResponse.firstName;
         const driverSurname = route.galUserPublicResponse.lastName;
