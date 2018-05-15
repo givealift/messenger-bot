@@ -72,7 +72,7 @@ app.get('/cities', (req, res) => {
 app.post('/notify', async (req, res) => {
     const body: IRouteSubscription = req.body;
     console.log('/notify');
-    console.log(body);
+    console.log(JSON.stringify(body));
     try {
         handler.handle({ notification: body, sender: { id: body.subscriber } });
         res.status(200).send("NOTIFIED");
