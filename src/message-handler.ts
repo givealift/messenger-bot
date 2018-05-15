@@ -99,7 +99,7 @@ class MessageHandler {
                 return "search";
             case text.toLowerCase() === "link":
                 return "link";
-            case text.toLocaleLowerCase().startsWith("powiadom"):
+            case startsWith("powiadom")(text) || startsWith("obserwuj")(text):
                 return "subscribe";
             case startsWith("anuluj")(text):
                 return "cancel-subscription";
@@ -152,7 +152,7 @@ class MessageHandler {
             let date = params.date ? params.date.format(dateFormat) : searchResults[0].from.date;
             list.addButton({
                 "type": "web_url",
-                "url": `https://givealift.herokuapp.com/route/search/?from=${params.from}&to=${params.to}&date=${date}`,
+                "url": `https://givealift.herokuapp.com/route-list?from=${params.from}&to=${params.to}&date=${date}`,
                 "title": "Szukaj dalej"
             })
         }
@@ -177,7 +177,7 @@ class MessageHandler {
             return responseBuilder.text(PARSE_ERROR);
         }
         const response = await this.api.cancelSubscription(sender_psid, params);
-        if (response === 'DELETED') {
+        if (response) {
             return responseBuilder.text(`Okej, nie będę Cię informował o przejazdach na trasie ${params.from} - ${params.to}`);
         }
         return responseBuilder.text('Okej, Nie ma sprawy.');

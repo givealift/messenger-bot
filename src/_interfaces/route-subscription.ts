@@ -6,6 +6,7 @@ export interface IRouteSubscription {
     toCityId: number;
     date: string;
     routeId?: number;
+    id?: number;
 }
 
 export interface INewRouteNotification {
