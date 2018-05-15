@@ -1,5 +1,4 @@
 import { Http } from "../http";
-import { MOCK_ROUTES } from '../stub-api';
 import { City } from "../_models/city";
 import { CitiesProvider } from "./cities.provider";
 import { startsWith } from "../utils";
@@ -20,10 +19,6 @@ export class APIService {
         let [fromCity] = database.cities.where(city => startsWith(from)(city.name));
         let [toCity] = database.cities.where(city => startsWith(to)(city.name));
 
-        console.log("city from db");
-
-        console.log(fromCity);
-
         if (!(fromCity && toCity)) {
             return [];
         }
@@ -36,8 +31,7 @@ export class APIService {
 
         try {
             const url = `${this.GIVEALIFT_API_URL}/route/search`;
-            // return await this.http.get<Route[]>(url, params);
-            return MOCK_ROUTES;
+            return await this.http.get<Route[]>(url, params);
         } catch (error) {
             console.log(error);
             return [];
