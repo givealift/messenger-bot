@@ -5,7 +5,7 @@ import { messageHandler as handler } from "./message-handler";
 import { CitiesProvider } from "./_services/cities.provider";
 import { database as db } from './_services/database';
 import { FacebookService } from "./_services/fb.service";
-import { IRouteSubscription } from "./_interfaces/route-subscription";
+import { IRouteSubscription, INewRouteNotification } from "./_interfaces/route-subscription";
 
 const PAGE_ACCESS_TOKEN = process.env.BOT_PAGE_ACCESS_TOKEN;
 const PORT = process.env.PORT || 1337;
@@ -70,11 +70,11 @@ app.get('/cities', (req, res) => {
 })
 
 app.post('/notify', async (req, res) => {
-    const body: IRouteSubscription = req.body;
+    const body: INewRouteNotification[] = req.body;
     console.log('/notify');
     console.log(JSON.stringify(body));
     try {
-        handler.handle({ notification: body, sender: { id: body.subscriber } });
+        handler.handle({ notifications: body, sender: 'api' });
         res.status(200).send("NOTIFIED");
     } catch (error) {
         console.error(error);

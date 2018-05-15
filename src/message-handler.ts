@@ -7,7 +7,7 @@ import { default as moment, Moment } from 'moment';
 import { IRouteParams } from "./_interfaces/route-params";
 import { ITextResponse, IListResponse } from "./_interfaces/responses";
 import { startsWith } from "./utils";
-import { IRouteSubscription } from "./_interfaces/route-subscription";
+import { IRouteSubscription, INewRouteNotification } from "./_interfaces/route-subscription";
 import { CitiesProvider } from "./_services/cities.provider";
 import { database } from "./_services/database";
 
@@ -42,8 +42,8 @@ class MessageHandler {
             this.handlePostback(sender_psid, webhook_event.postback);
             return;
         }
-        if (webhook_event.notification) {
-            this.handleNotification(sender_psid, webhook_event.notification);
+        if (webhook_event.notifications) {
+            this.handleNotifications(webhook_event.notifications);
             return;
         }
     }
@@ -224,33 +224,23 @@ class MessageHandler {
 
     // ================ NOTIFICATION handling ================
 
-    private async handleNotification(sender_psid: string, notification: IRouteSubscription) {
-        let cities = await database.cities.data;
-        let [fromCity] = cities.filter(city => city.cityId === notification.fromCityId);
-        let [toCity] = cities.filter(city => city.cityId === notification.toCityId);
-
-        let announcement = responseBuilder.routeAnnouncment(fromCity.name, toCity.name);
-
-        let route = await this.api.getRoute(notification.routeId);
+    private async handleNotifications(notifications: INewRouteNotification[]) {
+        const routeId = notifications[0].routeId;
+        let route = await this.api.getRoute(routeId);
 
         if (!route) {
-            throw new Error(`ROUTE_NOT_FOUND [routeId: ${notification.routeId}]`);
+            throw new Error(`ROUTE_NOT_FOUND [routeId: ${routeId}]`);
         }
 
-        if (!route.from.city.name) {
-            route.from.city.name = fromCity.name;
-        }
+        const subscribers = notifications.map(notification => notification.subscriber);
 
-        if (!route.to.city.name) {
-            route.to.city.name = toCity.name;
-        }
-        const routeResponse = responseBuilder.subscribedRoute(route);
-
-        await this.fb.sendNotificaiton(notification.subscriber, announcement);
-
-        await this.fb.sendNotificaiton(notification.subscriber, routeResponse);
+        await Promise.all(subscribers.map(async subscriber => {
+            const routeResponse = responseBuilder.subscribedRoute(route);
+            const announcement = responseBuilder.routeAnnouncment(route.from.city.name, route.to.city.name);
+            await this.fb.sendNotificaiton(subscriber, announcement);
+            await this.fb.sendNotificaiton(subscriber, routeResponse);
+        }))
     }
-
 
     // ================ POSTBACK handling ================
 
