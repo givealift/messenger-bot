@@ -7,6 +7,7 @@ import { IRouteParams } from "../_interfaces/route-params";
 import moment from 'moment';
 import { IRouteSubscription } from "../_interfaces/route-subscription";
 import { Route } from "../_models/route";
+import { database } from "./database";
 export class APIService {
 
     private readonly GIVEALIFT_API_URL = "https://mysterious-lowlands-82501.herokuapp.com/api";
@@ -15,8 +16,13 @@ export class APIService {
     constructor() { }
 
     async searchRoutes(from: string, to: string, date: string) {
-        let fromCity = await this.getCity(from);
-        let toCity = await this.getCity(to);
+
+        let [fromCity] = database.cities.where(city => startsWith(from)(city.name));
+        let [toCity] = database.cities.where(city => startsWith(to)(city.name));
+
+        console.log("city from db");
+
+        console.log(fromCity);
 
         if (!(fromCity && toCity)) {
             return [];
@@ -39,7 +45,7 @@ export class APIService {
     }
 
     async getCity(name: string): Promise<City | null> {
-        const cities: City[] = await CitiesProvider.getCities();
+        const cities: City[] = database.cities.data;
         const matches = cities.filter(city => startsWith(name)(city.name));
         if (matches.length) {
             return matches[0];
@@ -77,22 +83,35 @@ export class APIService {
 
         let date = params.date ? moment(params.date).format("YYYY-MM-DD") : null;
 
-        const body = {
+        const body: IRouteSubscription = {
             subscriber: owner_psid,
-            from: fromCity.cityId,
-            to: toCity.cityId,
+            fromCityId: fromCity.cityId,
+            toCityId: toCity.cityId,
             date: date
         }
         return body;
     }
 
     async subscribeForNotification(sender_psid: string, params: IRouteParams) {
+        const url = `${this.GIVEALIFT_API_URL}/subscription`;
+        // const url = "http://localhost:1337/subscribe";
+        let response;
+        try {
+            const body = await this.prepareSubscriptionBody(sender_psid, params);
+            return await this.http.post(url, body);
+        } catch (error) {
+            console.error(error);
+        }
+        return null;
+    }
+
+    async cancelSubscription(sender_psid: string, params: IRouteParams) {
         // const url = `${this.GIVEALIFT_API_URL}/subscribe`;
         const url = "http://localhost:1337/subscribe";
         let response;
         try {
             const body = await this.prepareSubscriptionBody(sender_psid, params);
-            response = await this.http.post(url, body);
+            response = await this.http.delete(url, body);
         } catch (error) {
             console.error(error);
         }

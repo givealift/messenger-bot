@@ -2,7 +2,7 @@ import { responseBuilder } from "./response-builder";
 import { Route } from './_models/route';
 import { FacebookService } from './_services/fb.service';
 import { APIService } from './_services/api.service';
-import { INSTRUCTIONS, UNKNOWN_COMMAND } from "./static-responses";
+import { INSTRUCTIONS, UNKNOWN_COMMAND, PARSE_ERROR } from "./static-responses";
 import { default as moment, Moment } from 'moment';
 import { IRouteParams } from "./_interfaces/route-params";
 import { ITextResponse, IListResponse } from "./_interfaces/responses";
@@ -15,7 +15,7 @@ type TextType =
     "help"
     | "search"
     | "subscribe"
-    | "cancel-notify"
+    | "cancel-subscription"
     | "link"
     | "emoticon"
     | "XD"
@@ -77,6 +77,9 @@ class MessageHandler {
             case "subscribe":
                 response = await this.getSubscribeResponse(sender_psid, incomingMessage);
                 break;
+            case "cancel-subscription":
+                response = await this.getCancelledSubscriptionResponse(sender_psid, incomingMessage);
+                break;
             default:
                 response = this.getNotSupportedResponse(incomingMessage);
                 console.debug("Responding with: unknown");
@@ -99,7 +102,7 @@ class MessageHandler {
             case text.toLocaleLowerCase().startsWith("powiadom"):
                 return "subscribe";
             case startsWith("anuluj")(text):
-                return "cancel-notify";
+                return "cancel-subscription";
             default:
                 return "unknown"
         }
@@ -129,33 +132,51 @@ class MessageHandler {
     private async getSearchResponse(text: string): Promise<IListResponse | ITextResponse> {
         const dateFormat = "YYYY-MM-DD";
         const params: IRouteParams = this.extractParamsFromText(text);
+        if (!params) {
+            return responseBuilder.text(PARSE_ERROR);
+        }
         const searchResults: Route[] = await this.search(params);
 
-        if (searchResults.length) {
-            const list = responseBuilder.list();
-            list.addElements(searchResults);
-
-            if (searchResults.length > 4) {
-                let date = params.date ? params.date.format(dateFormat) : searchResults[0].from.date;
-                list.addButton({
-                    "type": "web_url",
-                    "url": `https://givealift.herokuapp.com/route/search/?from=${params.from}&to=${params.to}&date=${date}`,
-                    "title": "Szukaj dalej"
-                })
-
-            }
-            return list.build();
+        if (searchResults.length === 0) {
+            return responseBuilder.text("Niestety nic nie znalazłem :(.");
         }
-        return responseBuilder.text("Niestety nic nie znalazłem :(.");
+
+        const list = responseBuilder.list();
+        list.addElements(searchResults);
+
+        if (searchResults.length > 4) {
+            let date = params.date ? params.date.format(dateFormat) : searchResults[0].from.date;
+            list.addButton({
+                "type": "web_url",
+                "url": `https://givealift.herokuapp.com/route/search/?from=${params.from}&to=${params.to}&date=${date}`,
+                "title": "Szukaj dalej"
+            })
+        }
+        return list.build();
     }
 
     private async getSubscribeResponse(sender_psid: string, text: string): Promise<ITextResponse> {
         const params = this.extractParamsFromText(text);
+        if (!params) {
+            return responseBuilder.text(PARSE_ERROR);
+        }
         const response = await this.api.subscribeForNotification(sender_psid, params)
-        if (response === 'SUBSCRIBED') {
+        if (response) {
             return responseBuilder.text(`Przyjąłem. Powiadomię Cię jak tylko pojawi się przejazd na trasie ${params.from} - ${params.to}`);
         }
         return responseBuilder.text('Sorki, chyba mam jakieś zwarcie, :/ Spróbuj ponownie później.');
+    }
+
+    private async getCancelledSubscriptionResponse(sender_psid: string, text: string): Promise<ITextResponse> {
+        const params = this.extractParamsFromText(text);
+        if (!params) {
+            return responseBuilder.text(PARSE_ERROR);
+        }
+        const response = await this.api.cancelSubscription(sender_psid, params);
+        if (response === 'DELETED') {
+            return responseBuilder.text(`Okej, nie będę Cię informował o przejazdach na trasie ${params.from} - ${params.to}`);
+        }
+        return responseBuilder.text('Okej, Nie ma sprawy.');
     }
 
     private extractParamsFromText(text: string): IRouteParams {
@@ -167,6 +188,9 @@ class MessageHandler {
 
         let date: Moment = dateString ? moment(dateString) : null;
 
+        if (!(from && to)) {
+            return null;
+        }
         return {
             from: from,
             to: to,
@@ -202,8 +226,8 @@ class MessageHandler {
 
     private async handleNotification(sender_psid: string, notification: IRouteSubscription) {
         let cities = await database.cities.data;
-        let [fromCity] = cities.filter(city => city.cityId === notification.from);
-        let [toCity] = cities.filter(city => city.cityId === notification.to);
+        let [fromCity] = cities.filter(city => city.cityId === notification.fromCityId);
+        let [toCity] = cities.filter(city => city.cityId === notification.toCityId);
 
         let announcement = responseBuilder.routeAnnouncment(fromCity.name, toCity.name);
 
