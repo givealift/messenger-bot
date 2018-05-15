@@ -152,7 +152,7 @@ class MessageHandler {
             let date = params.date ? params.date.format(dateFormat) : searchResults[0].from.date;
             list.addButton({
                 "type": "web_url",
-                "url": `https://givealift.herokuapp.com/route/search/?from=${params.from}&to=${params.to}&date=${date}`,
+                "url": `https://givealift.herokuapp.com/route-list?from=${params.from}&to=${params.to}&date=${date}`,
                 "title": "Szukaj dalej"
             })
         }
