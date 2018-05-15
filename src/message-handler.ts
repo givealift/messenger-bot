@@ -141,6 +141,10 @@ class MessageHandler {
             return responseBuilder.text("Niestety nic nie znalazłem :(.");
         }
 
+        if (searchResults.length === 1) {
+            return responseBuilder.subscribedRoute(searchResults[0]);
+        }
+
         const list = responseBuilder.list();
         list.addElements(searchResults);
 
