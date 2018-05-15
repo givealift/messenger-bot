@@ -60,6 +60,7 @@ export class ListTemplateBuilder {
         const template = {
             "title": `${from} -> ${to}, ${displayDate} o ${displayTime}`,
             "subtitle": `${driverName} ${driverSurname}`,
+            "image_url": "https://raw.githubusercontent.com/givealift/web/develop/src/assets/logo.png", //TODO: replace with user photo
             "default_action": {
                 "type": "web_url",
                 "url": `https://givealift.herokuapp.com/route/${route.routeId}`,

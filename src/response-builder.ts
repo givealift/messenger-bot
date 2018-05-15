@@ -49,6 +49,7 @@ class ResponseBuilder {
                         {
                             "title": `${route.from.city.name} - ${route.to.city.name}, ${moment(route.from.date).format("LL")}`,
                             "subtitle": `${route.galUserPublicResponse.firstName} ${route.galUserPublicResponse.lastName}`,
+                            "image_url": "https://raw.githubusercontent.com/givealift/web/develop/src/assets/logo.png", //TODO: replace with user photo
                             "buttons": [
                                 {
                                     "title": "Szczegóły",
