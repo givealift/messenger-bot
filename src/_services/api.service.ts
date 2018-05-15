@@ -107,7 +107,7 @@ export class APIService {
             let ids = this.getMatchingSubscriptions(body).map(s => s.id);
             console.log(ids);
             database.subscribers.removeWhere(s => ids.includes(s.id));
-            await Promise.all(ids.map(async id => await this.http.delete(`${url}/{id}?id=${id}`)));
+            await Promise.all(ids.map(async id => await this.http.delete(`${url}/${id}`)));
             return 'CANCELLED';
         } catch (error) {
             console.error(error);
