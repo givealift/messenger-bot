@@ -88,11 +88,12 @@ export class APIService {
 
     async subscribeForNotification(sender_psid: string, params: IRouteParams) {
         const url = `${this.GIVEALIFT_API_URL}/subscription`;
-        // const url = "http://localhost:1337/subscribe";
         let response;
         try {
             const body = await this.prepareSubscriptionBody(sender_psid, params);
-            return await this.http.post(url, body);
+            let response = await this.http.post(url, body);
+            database.subscribers.insert({ ...body, id: response });
+            return response;
         } catch (error) {
             console.error(error);
         }
@@ -100,15 +101,28 @@ export class APIService {
     }
 
     async cancelSubscription(sender_psid: string, params: IRouteParams) {
-        // const url = `${this.GIVEALIFT_API_URL}/subscribe`;
-        const url = "http://localhost:1337/subscribe";
-        let response;
+        const url = `${this.GIVEALIFT_API_URL}/subscription`;
         try {
             const body = await this.prepareSubscriptionBody(sender_psid, params);
-            response = await this.http.delete(url, body);
+            let ids = this.getMatchingSubscriptions(body).map(s => s.id);
+            console.log(ids);
+            database.subscribers.removeWhere(s => ids.includes(s.id));
+            await Promise.all(ids.map(async id => await this.http.delete(`${url}/{id}?id=${id}`)));
+            return 'CANCELLED';
         } catch (error) {
             console.error(error);
         }
-        return response;
+        return null;
+    }
+
+    private getMatchingSubscriptions(match: IRouteSubscription) {
+        return database.subscribers
+            .chain()
+            .where(s => {
+                return s.fromCityId === match.fromCityId
+                    && s.toCityId === match.toCityId
+                    && s.date == match.date
+            })
+            .data();
     }
 }

@@ -8,8 +8,7 @@ export const INSTRUCTIONS =
     "🔹 Jeśli chcesz, żebym Cię powiadomił o nowym przejeździe, " +
     "napisz: *powiadom (obserwuj) _Miasto-startowe_ _Miast-końcowe_ _data_* \n" +
     "Podobnie jak przy szukaniu, data jest opcjonalna :) \n" +
-    "Jeśli nie chcesz już otrzymać powiadomienia, dopisz *anuluj* przed powiadomieniem o które prosiłeś. \n" +
-    "Na przykład: *anuluj powiadomienie wraszawa katowice*";
+    "Możesz anulować otrzymywanie powiadomienia pisząc: *anuluj Warszawa Katowice* \n";
 
 export const UNKNOWN_COMMAND = (cmd: string): string => {
     if (cmd.length < 20) {

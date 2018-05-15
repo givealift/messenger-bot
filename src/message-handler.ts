@@ -99,7 +99,7 @@ class MessageHandler {
                 return "search";
             case text.toLowerCase() === "link":
                 return "link";
-            case text.toLocaleLowerCase().startsWith("powiadom"):
+            case startsWith("powiadom")(text) || startsWith("obserwuj")(text):
                 return "subscribe";
             case startsWith("anuluj")(text):
                 return "cancel-subscription";
@@ -177,7 +177,7 @@ class MessageHandler {
             return responseBuilder.text(PARSE_ERROR);
         }
         const response = await this.api.cancelSubscription(sender_psid, params);
-        if (response === 'DELETED') {
+        if (response) {
             return responseBuilder.text(`Okej, nie będę Cię informował o przejazdach na trasie ${params.from} - ${params.to}`);
         }
         return responseBuilder.text('Okej, Nie ma sprawy.');
