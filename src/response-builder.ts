@@ -2,7 +2,8 @@ import { Route } from "./_models/route";
 import moment from 'moment';
 import { ITextResponse, ITemplateParams } from "./_interfaces/responses";
 import { ListTemplateBuilder } from "./list-template-builder";
-
+import 'moment/locale/pl';
+moment.locale('pl');
 
 class ResponseBuilder {
 
@@ -47,7 +48,7 @@ class ResponseBuilder {
                     "template_type": "generic",
                     "elements": [
                         {
-                            "title": `${route.from.city.name} - ${route.to.city.name}, ${moment(route.from.date).format("LL")}`,
+                            "title": `${route.from.city.name} - ${route.to.city.name}, ${moment(route.from.date).format("LL HH:mm")}`,
                             "subtitle": `${route.galUserPublicResponse.firstName} ${route.galUserPublicResponse.lastName}`,
                             "image_url": "https://raw.githubusercontent.com/givealift/web/develop/src/assets/logo.png", //TODO: replace with user photo
                             "buttons": [
