@@ -33,7 +33,6 @@ app.post('/webhook', (req, res) => {
             // will only ever contain one message, so we get index 0
             let webhook_event = entry.messaging[0];
             console.log("incoming message", webhook_event);
-
             handler.handle(webhook_event);
         });
 
@@ -51,8 +50,15 @@ app.post('/subscribe', (req, res) => {
     res.status(200).send('SUBSCRIBED');
 })
 
-app.delete('/subscribe', (req, res) => {
+app.delete('/subscribe', async (req, res) => {
     let body: IRouteSubscription = req.body;
+    db.subscribers
+        .remove(db.subscribers.where(subscription => {
+            return subscription.subscriber === body.subscriber &&
+                subscription.toCityId === body.toCityId &&
+                subscription.fromCityId == body.fromCityId
+        }))
+    res.status(200).send("DELETED");
 })
 
 app.get('/subscriptions', (req, res) => {
