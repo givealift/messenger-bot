@@ -95,7 +95,7 @@ class MessageHandler {
                 return "emoticon";
             case text.toLowerCase() === "pomoc" || text.toLowerCase() === "instrukcja":
                 return "help";
-            case text.toLowerCase().startsWith("przejazd"):
+            case startsWith("przejazd")(text) || startsWith("szukaj")(text):
                 return "search";
             case text.toLowerCase() === "link":
                 return "link";
