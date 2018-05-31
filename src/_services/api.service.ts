@@ -78,7 +78,7 @@ export class APIService {
         let date = params.date ? moment(params.date).format("YYYY-MM-DD") : null;
 
         const body: IRouteSubscription = {
-            subscriptionType: "BOT",
+            notificationType: "BOT",
             subscriber: owner_psid,
             fromCityId: fromCity.cityId,
             toCityId: toCity.cityId,
