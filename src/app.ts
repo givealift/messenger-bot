@@ -55,8 +55,8 @@ app.delete('/subscribe', async (req, res) => {
     db.subscribers
         .remove(db.subscribers.where(subscription => {
             return subscription.subscriber === body.subscriber &&
-                subscription.toCityId === body.toCityId &&
-                subscription.fromCityId == body.fromCityId
+                subscription.toId === body.toId &&
+                subscription.fromId == body.fromId
         }))
     res.status(200).send("DELETED");
 })

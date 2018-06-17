@@ -81,8 +81,8 @@ export class APIService {
         const body: IRouteSubscription = {
             notificationType: "BOT",
             subscriber: owner_psid,
-            fromCityId: fromCity.cityId,
-            toCityId: toCity.cityId,
+            fromId: fromCity.cityId,
+            toId: toCity.cityId,
             date: date
         }
         return body;
@@ -121,8 +121,8 @@ export class APIService {
         return database.subscribers
             .chain()
             .where(s => {
-                return s.fromCityId === match.fromCityId
-                    && s.toCityId === match.toCityId
+                return s.fromId === match.fromId
+                    && s.toId === match.toId
                     && s.date == match.date
             })
             .data();
