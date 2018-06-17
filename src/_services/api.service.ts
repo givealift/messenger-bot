@@ -9,7 +9,8 @@ import { Route } from "../_models/route";
 import { database } from "./database";
 export class APIService {
 
-    private readonly GIVEALIFT_API_URL = "https://mysterious-lowlands-82501.herokuapp.com/api";
+    private readonly GIVEALIFT_API_URL = "https://gal-soa.herokuapp.com/api";
+    private readonly NOTIFICATIONS_SERVICE_URL = "https://gal-notifications.herokuapp.com/api";
     private http = new Http();
 
     constructor() { }
@@ -88,7 +89,7 @@ export class APIService {
     }
 
     async subscribeForNotification(sender_psid: string, params: IRouteParams) {
-        const url = `${this.GIVEALIFT_API_URL}/subscription`;
+        const url = `${this.NOTIFICATIONS_SERVICE_URL}/subscription`;
         let response;
         try {
             const body = await this.prepareSubscriptionBody(sender_psid, params);
@@ -102,7 +103,7 @@ export class APIService {
     }
 
     async cancelSubscription(sender_psid: string, params: IRouteParams) {
-        const url = `${this.GIVEALIFT_API_URL}/subscription`;
+        const url = `${this.NOTIFICATIONS_SERVICE_URL}/subscription`;
         try {
             const body = await this.prepareSubscriptionBody(sender_psid, params);
             let ids = this.getMatchingSubscriptions(body).map(s => s.id);
